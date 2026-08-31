@@ -1,0 +1,101 @@
+[
+ {
+  "id": "1997-jse-planetary-diameters-suryasiddhanta",
+  "title": "1997 Jse Planetary Diameters Suryasiddhanta",
+  "deva": "",
+  "author": "",
+  "file": "books/1997-jse-planetary-diameters-suryasiddhanta.json",
+  "pages": 8,
+  "verses": 0
+ },
+ {
+  "id": "brihatjatakam",
+  "title": "Bṛhat Jātaka",
+  "deva": "बृहज्जातक",
+  "author": "Varāhamihira",
+  "file": "books/brihatjatakam.json",
+  "pages": 496,
+  "verses": 499
+ },
+ {
+  "id": "jaiminisutram",
+  "title": "Jaimini Sūtra",
+  "deva": "जैमिनिसूत्र",
+  "author": "Jaimini",
+  "file": "books/jaiminisutram.json",
+  "pages": 116,
+  "verses": 188
+ },
+ {
+  "id": "jataka-alankar",
+  "title": "Jātaka Alaṅkāra",
+  "deva": "जातकालङ्कार",
+  "author": "",
+  "file": "books/jataka-alankar.json",
+  "pages": 110,
+  "verses": 120
+ },
+ {
+  "id": "jatakapadhati",
+  "title": "Jātaka Paddhati",
+  "deva": "जातकपद्धति",
+  "author": "",
+  "file": "books/jatakapadhati.json",
+  "pages": 191,
+  "verses": 60
+ },
+ {
+  "id": "laghu-parasari-and-madhya-parasari",
+  "title": "Laghu & Madhya Pārāśarī",
+  "deva": "लघुपाराशरी",
+  "author": "",
+  "file": "books/laghu-parasari-and-madhya-parasari.json",
+  "pages": 128,
+  "verses": 201
+ },
+ {
+  "id": "laghu-parashari-with-hindi-commentary",
+  "title": "Laghu Pārāśarī",
+  "deva": "लघुपाराशरी",
+  "author": "",
+  "file": "books/laghu-parashari-with-hindi-commentary.json",
+  "pages": 396,
+  "verses": 45
+ },
+ {
+  "id": "laghujatkam",
+  "title": "Laghu Jātaka",
+  "deva": "लघुजातक",
+  "author": "Varāhamihira",
+  "file": "books/laghujatkam.json",
+  "pages": 121,
+  "verses": 164
+ },
+ {
+  "id": "maansagari",
+  "title": "Mānasāgarī",
+  "deva": "मानसागरी",
+  "author": "",
+  "file": "books/maansagari.json",
+  "pages": 129,
+  "verses": 238
+ },
+ {
+  "id": "muhurtha-chintamani",
+  "title": "Muhūrta Cintāmaṇi",
+  "deva": "मुहूर्तचिन्तामणि",
+  "author": "Rāma Daivajña",
+  "file": "books/muhurtha-chintamani.json",
+  "pages": 3,
+  "verses": 0
+ },
+ {
+  "id": "laghu-test",
+  "title": "Laghu Test",
+  "deva": "",
+  "author": "",
+  "file": "books/laghu-test.json",
+  "pages": 8,
+  "verses": 7
+ }
+]
