@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jyotish Grantha Reader</title>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+Devanagari:wght@400;700&family=Noto+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
+    :root {
+        --bg: #faf9f6;
+        --text-main: #1a1a1a;
+        --text-muted: #555;
+        --accent: #8b3a3a;
+        --border: #e0dcd3;
+        --sidebar-bg: #f0eee6;
+        --header-bg: #faf9f6;
+        --mark-bg: #ffd54f;
+        --mark-text: #000;
+        --font-size: 18px;
+    }
+
+    body.dark {
+        --bg: #121212;
+        --text-main: #e0e0e0;
+        --text-muted: #a0a0a0;
+        --accent: #d48c8c;
+        --border: #333;
+        --sidebar-bg: #1a1a1a;
+        --header-bg: #121212;
+        --mark-bg: #8b6b00;
+        --mark-text: #fff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+        font-family: 'Noto Serif', serif;
+        background-color: var(--bg);
+        color: var(--text-main);
+        margin: 0;
+        display: flex;
+        height: 100vh;
+        overflow: hidden;
+        font-size: var(--font-size);
+        transition: background-color 0.3s, color 0.3s;
+    }
+
+    /* Typography */
+    h1, h2, h3, h4 { color: var(--accent); font-weight: 700; margin-top: 2rem; }
+    h1 { font-size: 2em; text-align: center; }
+    h2 { font-size: 1.5em; border-bottom: 1px solid var(--border); padding-bottom: 0.3rem; }
+    p { line-height: 1.6; margin: 1rem 0; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* Layout */
+    #sidebar {
+        width: 300px;
+        background: var(--sidebar-bg);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.3s ease;
+        z-index: 100;
+    }
+    
+    #sidebar-header {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border);
+        font-weight: bold;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    #toc {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1rem;
+        list-style: none;
+        margin: 0;
+    }
+
+    #toc li { margin-bottom: 0.5rem; }
+    #toc a { color: var(--text-main); font-size: 0.9em; display: block; }
+    #toc a:hover { color: var(--accent); }
+
+    #main-area {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        min-width: 0;
+    }
+
+    header {
+        height: 60px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        padding: 0 1rem;
+        background: var(--header-bg);
+        gap: 1rem;
+    }
+
+    .icon-btn {
+        background: none;
+        border: none;
+        color: var(--text-main);
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 4px;
+    }
+    .icon-btn:hover { background: var(--border); }
+
+    #search-input {
+        flex: 1;
+        max-width: 400px;
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        background: var(--bg);
+        color: var(--text-main);
+        font-family: inherit;
+        font-size: 1rem;
+    }
+
+    #content-container {
+        flex: 1;
+        overflow-y: auto;
+        padding: 2rem 1rem;
+        scroll-behavior: smooth;
+    }
+
+    .page-view {
+        max-width: 70ch;
+        margin: 0 auto;
+        padding-bottom: 4rem;
+    }
+
+    /* Blocks */
+    .block-shloka {
+        margin: 2.5rem 0;
+        text-align: center;
+    }
+    .shloka-original {
+        font-family: 'Noto Serif Devanagari', 'Sanskrit 2003', serif;
+        font-size: 1.4em;
+        line-height: 1.9;
+        color: var(--accent);
+        margin-bottom: 0.8rem;
+    }
+    .shloka-translit {
+        font-style: italic;
+        color: var(--text-muted);
+        margin-bottom: 0.8rem;
+        line-height: 1.5;
+    }
+    .shloka-translation {
+        line-height: 1.6;
+    }
+    
+    .block-table {
+        overflow-x: auto;
+        margin: 2rem 0;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9em;
+    }
+    th, td {
+        border: 1px solid var(--border);
+        padding: 0.75rem;
+        text-align: left;
+    }
+    th { background: var(--sidebar-bg); }
+
+    .block-figure {
+        margin: 2rem 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .figure-label {
+        font-weight: bold;
+        margin-bottom: 1rem;
+        color: var(--accent);
+    }
+    .kundali-chart {
+        width: 100%;
+        max-width: 400px;
+        height: auto;
+        color: var(--text-main);
+        margin-bottom: 1.5rem;
+    }
+    .kundali-chart text {
+        fill: currentColor;
+        font-family: inherit;
+    }
+    .rashi-no { font-size: 14px; font-weight: bold; opacity: 0.7; }
+    .grahas { font-size: 16px; }
+
+    .block-unknown {
+        border: 1px dashed red;
+        padding: 1rem;
+        color: red;
+        margin: 1rem 0;
+    }
+
+    .page-notes {
+        margin-top: 3rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border);
+        font-size: 0.9em;
+        color: var(--text-muted);
+    }
+
+    /* Bottom Navigation */
+    #bottom-nav {
+        height: 60px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        background: var(--header-bg);
+    }
+    .nav-btn {
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        color: var(--text-main);
+        cursor: pointer;
+        border-radius: 4px;
+        font-family: inherit;
+    }
+    .nav-btn:hover:not(:disabled) { background: var(--sidebar-bg); }
+    .nav-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    
+    #page-input {
+        width: 60px;
+        padding: 0.3rem;
+        text-align: center;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        color: var(--text-main);
+        font-family: inherit;
+    }
+
+    /* Settings Panel */
+    #settings-panel {
+        position: absolute;
+        top: 60px;
+        right: 1rem;
+        width: 280px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        padding: 1.5rem;
+        display: none;
+        z-index: 200;
+    }
+    #settings-panel.active { display: block; }
+    .settings-group { margin-bottom: 1.5rem; }
+    .settings-group h3 { margin: 0 0 0.5rem 0; font-size: 1rem; }
+    .settings-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+    .filter-label { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.9em; margin-bottom: 0.4rem;}
+
+    /* Search Results */
+    #search-results {
+        display: none;
+        max-width: 70ch;
+        margin: 0 auto;
+    }
+    .search-result-item {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border);
+        cursor: pointer;
+    }
+    .search-result-item:hover { background: var(--sidebar-bg); }
+    .search-result-meta { font-size: 0.8em; color: var(--accent); margin-bottom: 0.5rem; font-weight: bold; }
+    mark { background: var(--mark-bg); color: var(--mark-text); padding: 0 2px; border-radius: 2px; }
+
+    /* File Picker Overlay */
+    #file-overlay {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: var(--bg);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        text-align: center;
+        padding: 2rem;
+    }
+    .file-box {
+        border: 2px dashed var(--border);
+        padding: 3rem;
+        border-radius: 12px;
+        background: var(--sidebar-bg);
+    }
+    input[type="file"] { margin-top: 1rem; }
+
+    /* Filters CSS */
+    .hide-original .shloka-original { display: none; }
+    .hide-translit .shloka-translit { display: none; }
+    .hide-translation .shloka-translation { display: none; }
+    .hide-commentary .block-commentary { display: none; }
+    .hide-tables .block-table { display: none; }
+    .hide-figures .block-figure { display: none; }
+    .hide-notes .page-notes { display: none; }
+
+    @media (max-width: 768px) {
+        #sidebar {
+            position: absolute;
+            height: 100%;
+            transform: translateX(-100%);
+        }
+        #sidebar.open { transform: translateX(0); }
+        #search-input { max-width: 200px; }
+    }
+</style>
+</head>
+<body>
+
+<div id="file-overlay" style="display: none;">
+    <div class="file-box">
+        <h2>Jyotish Grantha Reader</h2>
+        <p>Could not load the JSON file automatically.</p>
+        <p>Please select your translated text JSON file to begin reading.</p>
+        <input type="file" id="file-input" accept=".json">
+    </div>
+</div>
+
+<aside id="sidebar">
+    <div id="sidebar-header">
+        <span>Contents</span>
+        <button class="icon-btn" id="close-sidebar" style="display:none;">✕</button>
+    </div>
+    <ul id="toc"></ul>
+</aside>
+
+<main id="main-area">
+    <header>
+        <button class="icon-btn" id="toggle-sidebar">☰</button>
+        <div style="flex:1"></div>
+        <input type="text" id="search-input" placeholder="Search text, IAST, Devanagari...">
+        <button class="icon-btn" id="toggle-settings">⚙</button>
+    </header>
+
+    <div id="settings-panel">
+        <div class="settings-group">
+            <h3>Appearance</h3>
+            <div class="settings-row">
+                <span>Theme</span>
+                <button class="nav-btn" id="theme-toggle">Toggle Dark</button>
+            </div>
+            <div class="settings-row">
+                <span>Text Size</span>
+                <div>
+                    <button class="nav-btn" id="font-dec">A-</button>
+                    <button class="nav-btn" id="font-inc">A+</button>
+                </div>
+            </div>
+        </div>
+        <div class="settings-group">
+            <h3>Filters</h3>
+            <label class="filter-label"><input type="checkbox" class="filter-cb" value="original" checked> Original Script</label>
+            <label class="filter-label"><input type="checkbox" class="filter-cb" value="translit" checked> Transliteration</label>
+            <label class="filter-label"><input type="checkbox" class="filter-cb" value="translation" checked> Translation</label>
+            <label class="filter-label"><input type="checkbox" class="filter-cb" value="commentary" checked> Commentary</label>
+            <label class="filter-label"><input type="checkbox" class="filter-cb" value="tables" checked> Tables</label>
+            <label class="filter-label"><input type="checkbox" class="filter-cb" value="figures" checked> Figures</label>
+            <label class="filter-label"><input type="checkbox" class="filter-cb" value="notes" checked> Notes</label>
+        </div>
+    </div>
+
+    <div id="content-container">
+        <div id="read-view" class="page-view"></div>
+        <div id="search-results"></div>
+    </div>
+
+    <nav id="bottom-nav">
+        <button class="nav-btn" id="btn-prev">Previous</button>
+        <span>Page <input type="number" id="page-input" min="1"> of <span id="total-pages">0</span></span>
+        <button class="nav-btn" id="btn-next">Next</button>
+    </nav>
+</main>
+
+<script>
+    // State
+    let bookData = [];
+    let searchIndex = [];
+    let currentPage = 1;
+    let totalPages = 0;
+    let isSearching = false;
+
+    // DOM Elements
+    const els = {
+        fileOverlay: document.getElementById('file-overlay'),
+        fileInput: document.getElementById('file-input'),
+        sidebar: document.getElementById('sidebar'),
+        toggleSidebar: document.getElementById('toggle-sidebar'),
+        closeSidebar: document.getElementById('close-sidebar'),
+        toc: document.getElementById('toc'),
+        readView: document.getElementById('read-view'),
+        searchResults: document.getElementById('search-results'),
+        searchInput: document.getElementById('search-input'),
+        btnPrev: document.getElementById('btn-prev'),
+        btnNext: document.getElementById('btn-next'),
+        pageInput: document.getElementById('page-input'),
+        totalPages: document.getElementById('total-pages'),
+        toggleSettings: document.getElementById('toggle-settings'),
+        settingsPanel: document.getElementById('settings-panel'),
+        themeToggle: document.getElementById('theme-toggle'),
+        fontInc: document.getElementById('font-inc'),
+        fontDec: document.getElementById('font-dec'),
+        contentContainer: document.getElementById('content-container'),
+        filterCbs: document.querySelectorAll('.filter-cb')
+    };
+
+    // Initialization
+    async function init() {
+        loadPreferences();
+        setupEventListeners();
+        
+        try {
+            const res = await fetch('brihat-jataka.json');
+            if (!res.ok) throw new Error('Network response was not ok');
+            const data = await res.json();
+            handleDataLoaded(data);
+        } catch (e) {
+            els.fileOverlay.style.display = 'flex';
+        }
+    }
+
+    function handleDataLoaded(data) {
+        bookData = data.sort((a, b) => a.page - b.page);
+        totalPages = bookData.length > 0 ? bookData[bookData.length - 1].page : 0;
+        els.totalPages.textContent = totalPages;
+        els.fileOverlay.style.display = 'none';
+        
+        buildSearchIndex();
+        buildTOC();
+        handleHashChange();
+    }
+
+    // Normalization for Search
+    function normalizeText(str) {
+        if (!str) return '';
+        // Remove Devanagari combining marks (Anusvara, Visarga, Candrabindu, Nukta)
+        let s = str.replace(/[\u0901\u0902\u0903\u093C]/g, '');
+        // NFD, remove Latin combining marks, lowercase
+        return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    }
+
+    function buildSearchIndex() {
+        searchIndex = [];
+        bookData.forEach(page => {
+            if (!page.blocks) return;
+            page.blocks.forEach(block => {
+                ['original', 'translit', 'text'].forEach(key => {
+                    if (block[key]) {
+                        searchIndex.push({
+                            page: page.page,
+                            text: block[key],
+                            norm: normalizeText(block[key])
+                        });
+                    }
+                });
+            });
+            if (page.notes) {
+                searchIndex.push({
+                    page: page.page,
+                    text: page.notes,
+                    norm: normalizeText(page.notes)
+                });
+            }
+        });
+    }
+
+    // Markdown Table Parser
+    function parseTable(text) {
+        const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+        if (lines.length < 2) return '';
+        let html = '<table>';
+        lines.forEach((line, idx) => {
+            if (idx === 1 && line.includes('---')) return;
+            const cells = line.split('|').map(c => c.trim()).filter((c, i, arr) => !(c === '' && (i === 0 || i === arr.length - 1)));
+            html += '<tr>';
+            cells.forEach(cell => {
+                html += idx === 0 ? `<th>${cell}</th>` : `<td>${cell}</td>`;
+            });
+            html += '</tr>';
+        });
+        html += '</table>';
+        return html;
+    }
+
+    // SVG Kundali Renderer
+    function renderChart(figure) {
+        if (!figure || figure.kind !== 'kundali' || !figure.houses) return '';
+        
+        let svg = `<svg viewBox="0 0 400 400" class="kundali-chart">
+            <rect x="2" y="2" width="396" height="396" fill="none" stroke="currentColor" stroke-width="2"/>
+            <line x1="2" y1="2" x2="398" y2="398" stroke="currentColor" stroke-width="2"/>
+            <line x1="398" y1="2" x2="2" y2="398" stroke="currentColor" stroke-width="2"/>
+            <polygon points="200,2 398,200 200,398 2,200" fill="none" stroke="currentColor" stroke-width="2"/>
+        `;
+
+        const centers = [
+            [200, 100], [100, 50], [50, 100], [100, 200],
+            [50, 300], [100, 350], [200, 300], [300, 350],
+            [350, 300], [300, 200], [350, 100], [300, 50]
+        ];
+
+        const rashiPos = [
+            [200, 25], [25, 25], [25, 175], [175, 200],
+            [25, 225], [25, 375], [200, 375], [375, 375],
+            [375, 225], [225, 200], [375, 175], [375, 25]
+        ];
+
+        for (let i = 0; i < 12; i++) {
+            const h = figure.houses.find(x => x.house === i + 1);
+            if (h) {
+                if (h.rashi_no) {
+                    svg += `<text x="${rashiPos[i][0]}" y="${rashiPos[i][1]}" class="rashi-no" text-anchor="middle" dominant-baseline="middle">${h.rashi_no}</text>`;
+                }
+                if (h.grahas && h.grahas !== '—') {
+                    svg += `<text x="${centers[i][0]}" y="${centers[i][1]}" class="grahas" text-anchor="middle" dominant-baseline="middle">${h.grahas}</text>`;
+                }
+            }
+        }
+        svg += `</svg>`;
+
+        let table = `<table><thead><tr><th>House</th><th>Rashi</th><th>Grahas</th></tr></thead><tbody>`;
+        for (let i = 1; i <= 12; i++) {
+            const h = figure.houses.find(x => x.house === i) || { house: i, rashi_no: '', rashi: '', grahas: '' };
+            table += `<tr><td>${h.house}</td><td>${h.rashi_no ? h.rashi_no + ' - ' : ''}${h.rashi || ''}</td><td>${h.grahas || ''}</td></tr>`;
+        }
+        table += `</tbody></table>`;
+
+        return `<div class="figure-label">${figure.label || ''}</div>${svg}<div class="block-table">${table}</div>`;
+    }
+
+    // Block Renderer
+    function renderBlock(block, pageFigures) {
+        if (!block) return '';
+        const type = block.type;
+        
+        if (type === 'heading') return `<h${block.level || 2}>${block.text}</h${block.level || 2}>`;
+        if (type === 'para') return `<p class="block-commentary">${block.text}</p>`;
+        if (type === 'list') {
+            const items = block.text.split('\n').map(l => l.replace(/^- /, '').trim());
+            return `<ul>${items.map(i => `<li>${i}</li>`).join('')}</ul>`;
+        }
+        if (type === 'table') return `<div class="block-table">${parseTable(block.text)}</div>`;
+        if (type === 'figure') {
+            const fig = pageFigures.find(f => f.id === block.figure_id);
+            if (!fig) return '';
+            return `<div class="block-figure">${renderChart(fig)}</div>`;
+        }
+        if (type === 'shloka' || type === 'verse') {
+            let html = `<div class="block-shloka">`;
+            if (block.original) html += `<div class="shloka-original">${block.original.replace(/\n/g, '<br>')}</div>`;
+            if (block.translit) html += `<div class="shloka-translit">${block.translit.replace(/\n/g, '<br>')}</div>`;
+            if (block.text) html += `<div class="shloka-translation">${block.text}</div>`;
+            html += `</div>`;
+            return html;
+        }
+        return `<div class="block-unknown">Unknown block type: ${type}</div>`;
+    }
+
+    // Page Rendering
+    function renderPage(pageNum) {
+        currentPage = pageNum;
+        els.pageInput.value = currentPage;
+        els.btnPrev.disabled = currentPage <= 1;
+        els.btnNext.disabled = currentPage >= totalPages;
+
+        const pageData = bookData.find(p => p.page === currentPage);
+        if (!pageData) {
+            els.readView.innerHTML = `<p>Page ${currentPage} not found.</p>`;
+            return;
+        }
+
+        let html = '';
+        if (pageData.blocks) {
+            pageData.blocks.forEach(block => {
+                html += renderBlock(block, pageData.figures || []);
+            });
+        }
+        if (pageData.notes) {
+            html += `<div class="page-notes"><strong>Notes:</strong> ${pageData.notes}</div>`;
+        }
+
+        els.readView.innerHTML = html;
+        els.contentContainer.scrollTop = 0;
+    }
+
+    // Search
+    function highlight(text, query) {
+        const normQuery = normalizeText(query);
+        const regexStr = normQuery.split('').map(c => {
+            const escaped = c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            return escaped + '[\\u0300-\\u036f\\u0901\\u0902\\u0903\\u093C]*';
+        }).join('');
+        const regex = new RegExp(regexStr, 'gi');
+        
+        let matchObj = regex.exec(text);
+        if (!matchObj) return text.substring(0, 150) + '...';
+        
+        const start = Math.max(0, matchObj.index - 60);
+        const end = Math.min(text.length, matchObj.index + matchObj[0].length + 60);
+        let snippet = text.substring(start, end);
+        if (start > 0) snippet = '...' + snippet;
+        if (end < text.length) snippet = snippet + '...';
+        
+        regex.lastIndex = 0;
+        return snippet.replace(regex, m => `<mark>${m}</mark>`);
+    }
+
+    function performSearch(query) {
+        const normQuery = normalizeText(query);
+        if (!normQuery) {
+            isSearching = false;
+            els.searchResults.style.display = 'none';
+            els.readView.style.display = 'block';
+            return;
+        }
+
+        isSearching = true;
+        els.readView.style.display = 'none';
+        els.searchResults.style.display = 'block';
+        
+        const results = [];
+        for (const item of searchIndex) {
+            if (item.norm.includes(normQuery)) {
+                results.push(item);
+                if (results.length > 100) break;
+            }
+        }
+
+        if (results.length === 0) {
+            els.searchResults.innerHTML = '<p>No results found.</p>';
+            return;
+        }
+
+        let html = `<h2>Search Results (${results.length}${results.length > 100 ? '+' : ''})</h2>`;
+        results.forEach(res => {
+            html += `
+                <div class="search-result-item" onclick="goToPage(${res.page})">
+                    <div class="search-result-meta">Page ${res.page}</div>
+                    <div>${highlight(res.text, query)}</div>
+                </div>
+            `;
+        });
+        els.searchResults.innerHTML = html;
+    }
+
+    // Navigation
+    function buildTOC() {
+        let html = '';
+        bookData.forEach(page => {
+            if (!page.blocks) return;
+            page.blocks.forEach(block => {
+                if (block.type === 'heading' && block.level <= 2) {
+                    html += `<li><a href="#page=${page.page}">${block.text}</a></li>`;
+                }
+            });
+        });
+        els.toc.innerHTML = html;
+    }
+
+    function goToPage(pageNum) {
+        window.location.hash = `page=${pageNum}`;
+        if (isSearching) {
+            els.searchInput.value = '';
+            performSearch('');
+        }
+        if (window.innerWidth <= 768) {
+            els.sidebar.classList.remove('open');
+        }
+    }
+
+    function handleHashChange() {
+        const hash = window.location.hash;
+        let p = 1;
+        if (hash.startsWith('#page=')) {
+            p = parseInt(hash.replace('#page=', ''), 10);
+        }
+        if (isNaN(p) || p < 1) p = 1;
+        if (bookData.length > 0) renderPage(p);
+    }
+
+    // Preferences & Settings
+    function loadPreferences() {
+        const theme = localStorage.getItem('theme') || 'light';
+        if (theme === 'dark') document.body.classList.add('dark');
+        
+        const fontSize = localStorage.getItem('fontSize');
+        if (fontSize) {
+            document.documentElement.style.setProperty('--font-size', fontSize + 'px');
+        }
+
+        const filters = JSON.parse(localStorage.getItem('filters') || '{}');
+        els.filterCbs.forEach(cb => {
+            if (filters[cb.value] === false) {
+                cb.checked = false;
+                els.readView.classList.add(`hide-${cb.value}`);
+            }
+        });
+    }
+
+    function saveFilters() {
+        const filters = {};
+        els.filterCbs.forEach(cb => {
+            filters[cb.value] = cb.checked;
+            if (cb.checked) els.readView.classList.remove(`hide-${cb.value}`);
+            else els.readView.classList.add(`hide-${cb.value}`);
+        });
+        localStorage.setItem('filters', JSON.stringify(filters));
+    }
+
+    // Event Listeners
+    function setupEventListeners() {
+        window.addEventListener('hashchange', handleHashChange);
+
+        els.fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                try {
+                    const data = JSON.parse(ev.target.result);
+                    handleDataLoaded(data);
+                } catch (err) {
+                    alert('Invalid JSON file.');
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        els.btnPrev.addEventListener('click', () => goToPage(currentPage - 1));
+        els.btnNext.addEventListener('click', () => goToPage(currentPage + 1));
+        
+        els.pageInput.addEventListener('change', (e) => {
+            let p = parseInt(e.target.value, 10);
+            if (p >= 1 && p <= totalPages) goToPage(p);
+            else e.target.value = currentPage;
+        });
+
+        let searchTimeout;
+        els.searchInput.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => performSearch(e.target.value), 300);
+        });
+
+        els.toggleSidebar.addEventListener('click', () => {
+            els.sidebar.classList.toggle('open');
+            els.closeSidebar.style.display = window.innerWidth <= 768 ? 'block' : 'none';
+        });
+        els.closeSidebar.addEventListener('click', () => els.sidebar.classList.remove('open'));
+
+        els.toggleSettings.addEventListener('click', (e) => {
+            e.stopPropagation();
+            els.settingsPanel.classList.toggle('active');
+        });
+        document.addEventListener('click', (e) => {
+            if (!els.settingsPanel.contains(e.target) && e.target !== els.toggleSettings) {
+                els.settingsPanel.classList.remove('active');
+            }
+        });
+
+        els.themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark');
+            localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+        });
+
+        els.fontInc.addEventListener('click', () => {
+            let size = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--font-size')) || 18;
+            size = Math.min(size + 2, 32);
+            document.documentElement.style.setProperty('--font-size', size + 'px');
+            localStorage.setItem('fontSize', size);
+        });
+
+        els.fontDec.addEventListener('click', () => {
+            let size = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--font-size')) || 18;
+            size = Math.max(size - 2, 12);
+            document.documentElement.style.setProperty('--font-size', size + 'px');
+            localStorage.setItem('fontSize', size);
+        });
+
+        els.filterCbs.forEach(cb => cb.addEventListener('change', saveFilters));
+    }
+
+    // Boot
+    init();
+</script>
+</body>
+</html>
